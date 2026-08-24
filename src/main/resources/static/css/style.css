@@ -1,0 +1,147 @@
+@charset "UTF-8";
+    /* 全体設定 */
+	
+	body {
+	    /* 
+	      1. 薄緑色のオーバーレイ（アルファ値を 0.85 → 0.5 に変更して濃さを約2倍にアップ） 
+	      2. 背景画像ライブラリトップ（images/library_top.png）を指定 
+	    */
+	    background: 
+	        linear-gradient(rgba(235, 245, 238, 0.3), rgba(235, 245, 238, 0.3)), 
+	        url("../images/library_top.png") no-repeat center center fixed;
+	    
+	    background-size: cover;
+	    font-family: Arial, sans-serif;
+	    margin: 0;
+	    padding: 20px;
+	    color: #333;
+	}
+
+    /* 見出し */
+    h2, h3, h4 {
+        color: rgb(0, 128, 66);
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+/*	中央寄せ	*/
+h2 {
+    text-align: center;
+    color: rgb(0, 128, 66);
+    margin: 10px;
+    padding: 10px 0;
+	
+	/* 下のカード風枠（.section-container）と同じ角丸設定 */
+	    border-radius: 10px;
+    
+    /* 画面上部に固定する設定 */
+    position: sticky;
+    top: 0;
+    z-index: 100; /* 他のコンテンツの上に表示 */
+    background-color: rgb(196, 251, 228); /* スクロール時に背景の文字が透けないよう半透明の白背景を付与 */
+    backdrop-filter: blur(5px); /* すりガラス効果（対応ブラウザのみ） */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* 下部にうっすら影をつけて区切りを明確に */
+}
+
+    /* カード風セクション枠（各フォームを画面中央に配置） */
+    .section-container {
+        max-width: 550px;
+        margin: 0 auto 30px auto;
+        padding: 25px 30px;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        text-shadow: none; /* 入力・閲覧エリアはシャドウを消して視認性を確保 */
+    }
+
+    /* 上部ナビゲーション・ボタン配置 */
+    .top-nav {
+        display: flex;
+        justify-content: flex-end;
+        max-width: 550px;
+        margin: 0 auto 15px auto;
+    }
+
+    /* フォーム行（ラベルと入力ボックスを左右で一直線に揃える） */
+    .form-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    /* ラベルの幅を統一して配置を揃える */
+    .form-group label {
+        width: 160px;
+        text-align: right;
+        padding-right: 15px;
+        font-weight: bold;
+        color: rgb(0, 128, 66);
+        font-size: 14px;
+    }
+
+    /* 入力ボックス（幅と高さを統一） */
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #b2d8c3;
+        border-radius: 5px;
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    /* フォーカス時の強調 */
+    .form-group input:focus {
+        border-color: rgb(0, 128, 66);
+        box-shadow: 0 0 5px rgba(0, 128, 66, 0.3);
+    }
+
+    /* ボタン共通デザイン */
+    button, input[type="submit"], .btn {
+        background-color: rgb(0, 128, 66);
+        color: #ffffff;
+        padding: 9px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover, input[type="submit"]:hover, .btn:hover {
+        background-color: rgb(0, 100, 50);
+    }
+
+    /* フォーム内の送信ボタン中央配置 */
+    .btn-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    /* 検索結果テーブルの装飾 */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background: #ffffff;
+    }
+
+    th, td {
+        padding: 10px 12px;
+        border: 1px solid #e0e0e0;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    th {
+        background-color: #eaf4ed;
+        color: rgb(0, 128, 66);
+        font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9fbf9;
+    }

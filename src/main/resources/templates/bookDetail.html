@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>書籍詳細ページ</title>
+    <!-- static/css/style.css の読み込み指定 -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <h2>＜書籍詳細画面＞</h2>
+
+    <!-- 戻るボタン -->
+    <div class="top-nav">
+        <button type="button" onclick="history.back()">検索結果/会員TOPページへ戻る</button>
+    </div>
+
+    <!-- 書籍詳細コンテンツ -->
+    <div class="section-container" style="max-width: 700px;" th:if="${book != null}">
+        <h3>■ 書籍詳細情報</h3>
+        
+        <!-- 表紙画像 -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img th:if="${book.volumeInfo.imageLinks?.thumbnail != null}" 
+                 th:src="${book.volumeInfo.imageLinks?.thumbnail}" 
+                 alt="Cover" 
+                 style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 4px; max-width: 150px; height: auto;"/>
+        </div>
+
+        <!-- 詳細情報リスト -->
+        <div class="form-group" style="align-items: flex-start;">
+            <label style="font-weight: bold; width: 140px;">タイトル：</label>
+            <span th:text="${book.volumeInfo.title}" style="flex: 1; word-break: break-all;"></span>
+        </div>
+
+        <div class="form-group" style="align-items: flex-start;" th:if="${book.volumeInfo.subtitle != null}">
+            <label style="font-weight: bold; width: 140px;">サブタイトル：</label>
+            <span th:text="${book.volumeInfo.subtitle}" style="flex: 1; word-break: break-all;"></span>
+        </div>
+
+        <div class="form-group" style="align-items: flex-start;">
+            <label style="font-weight: bold; width: 140px;">著者：</label>
+            <span th:text="${book.volumeInfo.authors != null ? #strings.arrayJoin(book.volumeInfo.authors, ', ') : '不明'}" style="flex: 1;"></span>
+        </div>
+
+        <div class="form-group" style="align-items: flex-start;">
+            <label style="font-weight: bold; width: 140px;">出版社：</label>
+            <span th:text="${book.volumeInfo.publisher != null ? book.volumeInfo.publisher : '不明'}" style="flex: 1;"></span>
+        </div>
+
+        <div class="form-group" style="align-items: flex-start;">
+            <label style="font-weight: bold; width: 140px;">出版日：</label>
+            <span th:text="${book.volumeInfo.publishedDate != null ? book.volumeInfo.publishedDate : '不明'}" style="flex: 1;"></span>
+        </div>
+
+        <div class="form-group" style="align-items: flex-start;">
+            <label style="font-weight: bold; width: 140px;">ページ数：</label>
+            <span th:text="${book.volumeInfo.pageCount != null ? book.volumeInfo.pageCount + ' ページ' : '不明'}" style="flex: 1;"></span>
+        </div>
+
+        <!-- 概要（Google APIのHTMLタグ描画に対応するため th:utext を指定） -->
+        <div class="form-group" style="align-items: flex-start;">
+            <label style="font-weight: bold; width: 140px;">概要：</label>
+            <div th:utext="${book.volumeInfo.description != null ? book.volumeInfo.description : '概要情報はありません。'}" 
+                 style="flex: 1; line-height: 1.6; background: #fafafa; padding: 10px; border-radius: 4px; border: 1px solid #e0e0e0;">
+            </div>
+        </div>
+
+        <div class="form-group" style="align-items: flex-start; margin-top: 15px;">
+            <label style="font-weight: bold; width: 140px;">外部リンク：</label>
+            <a th:href="${book.volumeInfo.canonicalVolumeLink}" target="_blank" style="color: rgb(0, 128, 66); text-decoration: underline; font-weight: bold;">
+                Google Books で見る ↗
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

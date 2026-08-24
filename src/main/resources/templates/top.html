@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>会員TOP</title>
+    <!-- static/css/style.css の読み込み指定 -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <h2>＜会員TOP画面＞</h2>
+
+    <!-- ログアウトボタン -->
+    <div class="top-nav">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">ログアウト</button>
+        </form>	
+    </div>
+
+    <!-- 1. 詳細検索フォーム -->
+    <div class="section-container" style="max-width: 650px;">
+        <h3>■ 詳細検索 (Google Books)</h3>
+        <form th:action="@{/top}" method="get">
+            <div class="form-group">
+                <label for="title">書籍名：</label>
+                <input type="text" id="title" name="title" th:value="${param.title}">
+            </div>
+            <div class="form-group">
+                <label for="author">著者：</label>
+                <input type="text" id="author" name="author" th:value="${param.author}">
+            </div>
+            <div class="form-group">
+                <label for="publisher">出版社：</label>
+                <input type="text" id="publisher" name="publisher" th:value="${param.publisher}">
+            </div>
+            <div class="form-group">
+                <label for="isbn">ISBN：</label>
+                <input type="text" id="isbn" name="isbn" th:value="${param.isbn}">
+            </div>
+            <div class="form-group">
+                <label>出版年月：</label>
+                <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                    <input type="month" name="fromDate" th:value="${param.fromDate}" style="margin: 0;">
+                    <span>～</span>
+                    <input type="month" name="toDate" th:value="${param.toDate}" style="margin: 0;">
+                </div>
+            </div>
+            <div class="btn-container">
+                <button type="submit">検索</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. 検索結果一覧 -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ 検索結果</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px; text-align: center;">画像</th>
+                    <th>書籍名</th>
+                    <th>著者</th>
+                    <th>出版社</th>
+                    <th style="width: 80px; text-align: center;">レンタル</th>
+                    <th style="width: 95px; text-align: center;">お気に入り</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="book : ${searchResults}" th:if="${searchResults != null}">
+                    <td style="text-align: center;">
+                        <img th:src="${book.volumeInfo.imageLinks?.smallThumbnail}" width="50"/>
+                    </td>
+                    <td>
+                        <a th:href="@{'/bookDetail/' + ${book.id}}" th:text="${book.volumeInfo.title}"></a>
+                    </td>
+                    <td th:text="${book.volumeInfo.authors}"></td>
+                    <td th:text="${book.volumeInfo.publisher}"></td>
+                    <td style="text-align: center;">
+                        <form th:action="@{/top/cart/rental/add}" method="post">
+                            <input type="hidden" name="bookId" th:value="${book.id}"/>
+                            <input type="hidden" name="title" th:value="${param.title}"/>
+                            <input type="hidden" name="author" th:value="${param.author}"/>
+                            <input type="hidden" name="publisher" th:value="${param.publisher}"/>
+                            <input type="hidden" name="isbn" th:value="${param.isbn}"/>
+                            <input type="hidden" name="fromDate" th:value="${param.fromDate}"/>
+                            <input type="hidden" name="toDate" th:value="${param.toDate}"/>
+                            <input type="hidden" name="page" th:value="${currentPage}"/>
+                            <button type="submit">カートへ</button>
+                        </form>
+                    </td>
+                    <td style="text-align: center;">
+                        <form th:action="@{/top/cart/favorite/add}" method="post">
+                            <input type="hidden" name="bookId" th:value="${book.id}"/>
+                            <input type="hidden" name="title" th:value="${param.title}"/>
+                            <input type="hidden" name="author" th:value="${param.author}"/>
+                            <input type="hidden" name="publisher" th:value="${param.publisher}"/>
+                            <input type="hidden" name="isbn" th:value="${param.isbn}"/>
+                            <input type="hidden" name="fromDate" th:value="${param.fromDate}"/>
+                            <input type="hidden" name="toDate" th:value="${param.toDate}"/>
+                            <input type="hidden" name="page" th:value="${currentPage}"/>
+                            <button type="submit">お気に入りへ</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${searchResults == null or searchResults.isEmpty()}">
+                    <td colspan="6" style="text-align: center;">該当する書籍がありません。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- ページネーション -->
+        <div th:if="${searchResults != null and !searchResults.isEmpty()}" style="margin-top: 15px; text-align: center; font-weight: bold;">
+            <a th:if="${currentPage > 0}" 
+               th:href="@{/top(page=${currentPage - 1}, title=${param.title}, author=${param.author}, publisher=${param.publisher}, isbn=${param.isbn}, fromDate=${param.fromDate}, toDate=${param.toDate})}"
+               style="margin-right: 10px; color: rgb(0, 128, 66); text-decoration: none;">
+               &lt; 戻る
+            </a>
+
+            <span th:text="${currentPage + 1}" style="padding: 0 5px;">1</span>
+
+            <a th:if="${currentPage + 1 < totalPages}" 
+               th:href="@{/top(page=${currentPage + 1}, title=${param.title}, author=${param.author}, publisher=${param.publisher}, isbn=${param.isbn}, fromDate=${param.fromDate}, toDate=${param.toDate})}"
+               style="margin-left: 10px; color: rgb(0, 128, 66); text-decoration: none;">
+               次ページへ &gt;
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. レンタル手続き & カート -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ レンタル手続き</h3>
+        <form th:action="@{/top/rental/execute}" method="post">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px; text-align: center;">画像</th>
+                        <th>書籍名</th>
+                        <th>著者</th>
+                        <th>出版社</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${rentalCart}">
+                        <td style="text-align: center;">
+                            <img th:src="${item.volumeInfo.imageLinks?.smallThumbnail}" width="40"/>
+                        </td>
+                        <td th:text="${item.volumeInfo.title}"></td>
+                        <td th:text="${item.volumeInfo.authors}"></td>
+                        <td th:text="${item.volumeInfo.publisher}"></td>
+                    </tr>
+                    <tr th:if="${rentalCart == null or rentalCart.isEmpty()}">
+                        <td colspan="4" style="text-align: center;">カートの中に書籍はありません。</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="btn-container" th:if="${rentalCart != null and !rentalCart.isEmpty()}">
+                <button type="submit">レンタル実行</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 4. レンタル中リスト -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ レンタル中リスト (最大30件)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px; text-align: center;">画像</th>
+                    <th>書籍名</th>
+                    <th>著者</th>
+                    <th>出版社</th>
+                    <th style="width: 110px;">レンタル開始日</th>
+                    <th style="width: 80px; text-align: center;">返却</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="r : ${rentingList}">
+                    <td style="text-align: center;">
+                        <img th:src="${r.bookHistory.imageLink}" width="40"/>
+                    </td>
+                    <td>
+                        <a th:href="@{'/bookDetail/' + ${r.bookHistory.googleBookId}}" th:text="${r.bookHistory.title}"></a>
+                    </td>
+                    <td th:text="${r.bookHistory.authors}"></td>
+                    <td th:text="${r.bookHistory.publisher}"></td>
+                    <td th:text="${#temporals.format(r.rentalDate, 'yyyy/MM/dd')}"></td>
+                    <td style="text-align: center;">
+                        <form th:action="@{/top/rental/return}" method="post">
+                            <input type="hidden" name="rentalId" th:value="${r.id}"/>
+                            <button type="submit">返却実行</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${rentingList == null or rentingList.isEmpty()}">
+                    <td colspan="6" style="text-align: center;">現在レンタル中の書籍はありません。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 5. お気に入り一覧 -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>★ お気に入り一覧</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px; text-align: center;">画像</th>
+                    <th>書籍名</th>
+                    <th>著者</th>
+                    <th>出版社</th>
+                    <th style="width: 100px;">登録日</th>
+                    <th style="width: 70px; text-align: center;">取消</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="fav : ${favorites}">
+                    <td style="text-align: center;">
+                        <img th:if="${fav.bookHistory != null}" th:src="${fav.bookHistory.imageLink}" width="40"/>
+                    </td>
+                    <td>
+                        <a th:href="@{'/bookDetail/' + ${fav.googleBookId}}" 
+                           th:text="${fav.bookHistory != null ? fav.bookHistory.title : fav.googleBookId}"></a>
+                    </td>
+                    <td th:text="${fav.bookHistory != null ? fav.bookHistory.authors : ''}"></td>
+                    <td th:text="${fav.bookHistory != null ? fav.bookHistory.publisher : ''}"></td>
+                    <td th:text="${#temporals.format(fav.createdAt, 'yyyy/MM/dd')}"></td>
+                    <td style="text-align: center;">
+                        <form th:action="@{/favorites/remove}" method="post">
+                            <input type="hidden" name="bookId" th:value="${fav.googleBookId}"/>
+                            <button type="submit">削除</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${favorites == null or favorites.isEmpty()}">
+                    <td colspan="6" style="text-align: center;">お気に入りに登録された書籍はありません。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 6. お知らせ（検討中コンテンツ） -->
+    <div class="section-container" style="max-width: 650px;">
+        <h3>■ 管理者からのお知らせ（検討中）</h3>
+        <ul style="text-align: left; padding-left: 20px; line-height: 1.8;">
+            <li><a th:href="@{/recommendeBooks.html}">司書のおすすめ本</a></li>
+            <li><a th:href="@{/todaysBooks.html}">今日は何の日のおすすめ本</a></li>
+            <li><a th:href="@{/usercount.html}">期間あたりの来館人数</a></li>
+            <li><a th:href="@{/ranking.html}">貸出本・カテゴリ・ページ数ランキング</a></li>
+        </ul>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>管理者MENU</title>
+    <!-- static/css/style.css の読み込み指定 -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <h2>＜管理者MENU＞</h2>
+    
+    <!-- ログアウトボタン -->
+    <div class="top-nav">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">ログアウト</button>
+        </form>
+    </div>
+
+    <!-- ■ 会員IDのメンテナンス -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ 会員IDのメンテナンス（不要IDの削除）</h3>
+        <form th:action="@{/admin/users/delete}" method="post">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ID作成日</th>
+                        <th>直近の操作日時</th>
+                        <th style="width: 60px; text-align: center;">削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="account : ${userList}">
+                        <td th:text="${account.id}">A0000001</td>
+                        <td th:text="${account.createdAt != null ? #temporals.format(account.createdAt, 'yyyy/MM/dd') : '-'}">2025/08/13</td>
+                        <td th:text="${account.lastLoginAt != null ? #temporals.format(account.lastLoginAt, 'yyyy/MM/dd HH:mm') : '-'}">2026/08/13</td>
+                        <td style="text-align: center;">
+                            <input type="checkbox" name="deleteIds" th:value="${account.id}">
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(userList)}">
+                        <td colspan="4" style="text-align: center;">該当する会員はいません。</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="btn-container" style="margin-top: 15px;" th:if="${!#lists.isEmpty(userList)}">
+                <button type="submit" onclick="return confirm('選択した会員を削除しますか？');">チェックIDの削除</button>
+            </div>
+        </form>
+        
+        <!-- ページネーション -->
+        <div class="pagination" th:if="${userTotalPages > 1}" style="margin-top: 15px; text-align: center; font-weight: bold;">
+            <span th:each="i : ${#numbers.sequence(0, userTotalPages - 1)}">
+                <a th:if="${i != (adminSearchForm?.userPage ?: 0)}" 
+                   th:href="@{/admin/menu(userPage=${i}, adminPage=${adminSearchForm?.adminPage ?: 0})}" 
+                   th:text="${i + 1}" style="margin: 0 5px; color: rgb(0, 128, 66); text-decoration: none;">1</a>
+                <span class="active" th:if="${i == (adminSearchForm?.userPage ?: 0)}" th:text="${i + 1}" style="margin: 0 5px; text-decoration: underline;">1</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- ■ 管理者IDのメンテナンス -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ 管理者IDのメンテナンス（不要IDの削除）</h3>
+        <form th:action="@{/admin/users/delete}" method="post">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ID作成日</th>
+                        <th>直近の操作日時</th>
+                        <th style="width: 60px; text-align: center;">削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="admin : ${adminList}">
+                        <td th:text="${admin.id}">A0000001</td>
+                        <td th:text="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'yyyy/MM/dd') : '-'}">2025/08/13</td>
+                        <td th:text="${admin.lastLoginAt != null ? #temporals.format(admin.lastLoginAt, 'yyyy/MM/dd HH:mm') : '-'}">2026/08/13</td>
+                        <td style="text-align: center;">
+                            <input type="checkbox" name="deleteIds" th:value="${admin.id}">
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(adminList)}">
+                        <td colspan="4" style="text-align: center;">該当する管理者はいません。</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="btn-container" style="margin-top: 15px;" th:if="${!#lists.isEmpty(adminList)}">
+                <button type="submit" onclick="return confirm('選択した管理者を削除しますか？');">チェックIDの削除</button>
+            </div>
+        </form>
+        
+        <!-- ページネーション -->
+        <div class="pagination" th:if="${adminTotalPages > 1}" style="margin-top: 15px; text-align: center; font-weight: bold;">
+            <span th:each="i : ${#numbers.sequence(0, adminTotalPages - 1)}">
+                <a th:if="${i != (adminSearchForm?.adminPage ?: 0)}" 
+                   th:href="@{/admin/menu(adminPage=${i}, userPage=${adminSearchForm?.userPage ?: 0})}" 
+                   th:text="${i + 1}" style="margin: 0 5px; color: rgb(0, 128, 66); text-decoration: none;">1</a>
+                <span class="active" th:if="${i == (adminSearchForm?.adminPage ?: 0)}" th:text="${i + 1}" style="margin: 0 5px; text-decoration: underline;">1</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- ■ レンタル中書籍のメンテナンス -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ レンタル中書籍のメンテナンス（実態が返却済みの削除）</h3>
+        <form th:action="@{/admin/menu}" method="get" style="margin-bottom: 20px;">
+            <div class="form-group">
+                <label>会員ID：</label>
+                <input type="text" name="rentalUserId" th:value="${adminSearchForm?.rentalUserId}">
+            </div>
+            <div class="form-group">
+                <label>期間：</label>
+                <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                    <input type="date" name="rentalFromDate" th:value="${adminSearchForm?.rentalFromDate}" style="margin: 0;">
+                    <span>～</span>
+                    <input type="date" name="rentalToDate" th:value="${adminSearchForm?.rentalToDate}" style="margin: 0;">
+                </div>
+            </div>
+            <div class="btn-container">
+                <button type="submit">絞り込み</button>
+                <a th:href="@{/admin/menu}" style="margin-left: 10px; font-size: 14px; text-decoration: none; color: rgb(0, 128, 66);">↓すべて表示↓</a>
+            </div>
+        </form>
+
+        <form th:action="@{/admin/rentals/return}" method="post">
+            <table>
+                <thead>
+                    <tr>
+                        <th>書籍名</th>
+                        <th>著者</th>
+                        <th>出版社</th>
+                        <th style="width: 110px;">レンタル開始日</th>
+                        <th style="width: 80px; text-align: center;">返却処理</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="rental : ${rentingList}">
+                        <td th:text="${rental.bookHistory != null ? rental.bookHistory.title : '-'}">書籍１</td>
+                        <td th:text="${rental.bookHistory != null ? rental.bookHistory.authors : '-'}">著者1</td>
+                        <td th:text="${rental.bookHistory != null ? rental.bookHistory.publisher : '-'}">出版社</td>
+                        <td th:text="${rental.rentalDate != null ? #temporals.format(rental.rentalDate, 'yyyy/MM/dd') : '-'}">2026/08/01</td>
+                        <td style="text-align: center;">
+                            <input type="checkbox" name="rentalIds" th:value="${rental.id}">
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(rentingList)}">
+                        <td colspan="5" style="text-align: center;">対象のレンタル中書籍はありません。</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="btn-container" style="margin-top: 15px;" th:if="${!#lists.isEmpty(rentingList)}">
+                <button type="submit" onclick="return confirm('選択した書籍を返却済みに変更しますか？');">チェックIDの削除</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ■ レンタル実績集計 -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ レンタル実績集計（過去1年間）</h3>
+        <form th:action="@{/admin/menu}" method="get" style="margin-bottom: 20px;">
+            <div class="form-group">
+                <label>会員ID：</label>
+                <input type="text" name="statsUserId" th:value="${adminSearchForm?.statsUserId}">
+            </div>
+            <div class="form-group">
+                <label>年月指定：</label>
+                <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                    <input type="month" name="statsFromDate" th:value="${adminSearchForm?.statsFromDate}" style="margin: 0;">
+                    <span>～</span>
+                    <input type="month" name="statsToDate" th:value="${adminSearchForm?.statsToDate}" style="margin: 0;">
+                </div>
+            </div>
+            <div class="btn-container">
+                <button type="submit">集計</button>
+            </div>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="text-align: center;">年月</th>
+                    <th style="text-align: center;">レンタル冊数</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="stat : ${monthlyStats}">
+                    <td style="text-align: center;" th:text="${stat.month}">2026-01</td>
+                    <td style="text-align: center;" th:text="${stat.count}">0</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(monthlyStats)}">
+                    <td colspan="2" style="text-align: center;">データがありません。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ■ ランキング -->
+    <div class="section-container" style="max-width: 900px;">
+        <h3>■ ランキング</h3>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <!-- ベスト10 (会員) -->
+            <div style="flex: 1; min-width: 280px;">
+                <h4 style="color: rgb(0, 128, 66); margin-bottom: 10px;">・レンタル実績：ベスト10</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">順位</th>
+                            <th>会員ID</th>
+                            <th style="width: 100px; text-align: center;">レンタル冊数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="row, stat : ${userRanking}">
+                            <td style="text-align: center;" th:text="${stat.count}">1</td>
+                            <td th:text="${row[0]}">User01</td>
+                            <td style="text-align: center;" th:text="${row[1]}">15</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(userRanking)}">
+                            <td colspan="3" style="text-align: center;">データがありません。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ベスト10 (書籍) -->
+            <div style="flex: 1; min-width: 280px;">
+                <h4 style="color: rgb(0, 128, 66); margin-bottom: 10px;">・レンタル書籍：ベスト10</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">順位</th>
+                            <th>書籍名</th>
+                            <th style="width: 100px; text-align: center;">レンタル回数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="row, stat : ${bookRanking}">
+                            <td style="text-align: center;" th:text="${stat.count}">1</td>
+                            <td th:text="${row[0]}">Java入門</td>
+                            <td style="text-align: center;" th:text="${row[1]}">20</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(bookRanking)}">
+                            <td colspan="3" style="text-align: center;">データがありません。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
