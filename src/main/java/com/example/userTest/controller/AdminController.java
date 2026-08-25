@@ -32,12 +32,12 @@ public class AdminController {
     @GetMapping("/menu")
     public String adminMenu(Model model) {
 
-        // 1. 会員一覧 (ROLE_USER) の取得
-        List<Account> userList = accountRepository.findByRole(Role.ROLE_USER);
+        // 1. 会員一覧 (Role.USER) の取得
+        List<Account> userList = accountRepository.findByRole(Role.USER);
         model.addAttribute("userList", userList != null ? userList : new ArrayList<>());
 
-        // 2. 管理者一覧 (ROLE_ADMIN) の取得
-        List<Account> adminList = accountRepository.findByRole(Role.ROLE_ADMIN);
+        // 2. 管理者一覧 (Role.ADMIN) の取得
+        List<Account> adminList = accountRepository.findByRole(Role.ADMIN);
         model.addAttribute("adminList", adminList != null ? adminList : new ArrayList<>());
 
         // 3. レンタル中書籍一覧の取得（RENTING ステータス）
