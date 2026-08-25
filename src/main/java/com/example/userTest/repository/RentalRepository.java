@@ -20,10 +20,11 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     long countByUserIdAndStatus(String userId, String status);
 
     /**
-     * 月別実績集計用の検索クエリ
+     * 月別実績集計用の検索クエリ (PostgreSQL安全対応)
+     * AdminController 側で空文字は null 変換されるため、:userId = '' の判定を排除しています。
      */
     @Query("SELECT r FROM Rental r WHERE " +
-           "(:userId IS NULL OR :userId = '' OR r.userId = :userId) AND " +
+           "(:userId IS NULL OR r.userId = :userId) AND " +
            "(:startDate IS NULL OR r.rentalDate >= :startDate) AND " +
            "(:endDate IS NULL OR r.rentalDate <= :endDate)")
     List<Rental> findRentalsForStats(
