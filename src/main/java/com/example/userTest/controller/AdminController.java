@@ -40,9 +40,9 @@ public class AdminController {
         List<Account> adminList = accountRepository.findByRole(Role.ADMIN);
         model.addAttribute("adminList", adminList != null ? adminList : new ArrayList<>());
 
-        // 3. レンタル中書籍一覧の取得（RENTING ステータス）
+        // 3. レンタル中書籍一覧の取得
         try {
-            model.addAttribute("rentingList", rentalRepository.findByStatus("RENTING"));
+            model.addAttribute("rentingList", rentalRepository.findAll());
         } catch (Exception e) {
             model.addAttribute("rentingList", new ArrayList<>());
         }
