@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     id VARCHAR(50) PRIMARY KEY,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 書籍履歴テーブル
@@ -18,11 +18,11 @@ CREATE TABLE IF NOT EXISTS book_history (
 
 -- レンタルテーブル
 CREATE TABLE IF NOT EXISTS rentals (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
     book_history_id VARCHAR(100) NOT NULL,
-    rental_date DATETIME NOT NULL,
-    returned_date DATETIME,
+    rental_date TIMESTAMP NOT NULL,
+    returned_date TIMESTAMP,
     status VARCHAR(20) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES accounts(id),
     FOREIGN KEY (book_history_id) REFERENCES book_history(id)
@@ -30,10 +30,10 @@ CREATE TABLE IF NOT EXISTS rentals (
 
 -- お気に入りテーブル
 CREATE TABLE IF NOT EXISTS favorites (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
     book_history_id VARCHAR(100) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES accounts(id),
     FOREIGN KEY (book_history_id) REFERENCES book_history(id)
 );
