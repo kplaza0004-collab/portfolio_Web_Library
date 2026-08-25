@@ -41,11 +41,20 @@ public class AdminController {
         model.addAttribute("adminList", adminList != null ? adminList : new ArrayList<>());
 
         // 3. レンタル中書籍一覧の取得（RENTING ステータス）
-        model.addAttribute("rentingList", rentalRepository.findByUserIdAndStatus(null, "RENTING"));
+        try {
+            model.addAttribute("rentingList", rentalRepository.findByStatus("RENTING"));
+        } catch (Exception e) {
+            model.addAttribute("rentingList", new ArrayList<>());
+        }
 
         // 4. ランキングデータの取得
-        model.addAttribute("userRanking", rentalRepository.findTopUserRanking());
-        model.addAttribute("bookRanking", rentalRepository.findTopBookRanking());
+        try {
+            model.addAttribute("userRanking", rentalRepository.findTopUserRanking());
+            model.addAttribute("bookRanking", rentalRepository.findTopBookRanking());
+        } catch (Exception e) {
+            model.addAttribute("userRanking", new ArrayList<>());
+            model.addAttribute("bookRanking", new ArrayList<>());
+        }
 
         return "admin/menu";
     }
