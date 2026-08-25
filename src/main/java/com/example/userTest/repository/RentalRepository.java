@@ -40,10 +40,10 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     List<Object[]> findTopUserRanking();
 
     /**
-     * 書籍別レンタル実績ベスト10を取得（簡略化版）
+     * 書籍別レンタル実績ベスト10を取得（r.bookHistory.title を参照）
      */
-    @Query("SELECT r.title, COUNT(r) FROM Rental r " +
-           "GROUP BY r.title " +
+    @Query("SELECT r.bookHistory.title, COUNT(r) FROM Rental r " +
+           "GROUP BY r.bookHistory.title " +
            "ORDER BY COUNT(r) DESC")
     List<Object[]> findTopBookRanking();
 }
