@@ -29,6 +29,12 @@ public class AuthController {
 
     private final AccountService accountService;
 
+    @GetMapping("/")
+    public String index() {
+        // ログイン画面のパスへリダイレクト
+        return "redirect:/login"; 
+    }
+
     // --- 会員ログイン・登録画面（初期表示） ---
     @GetMapping("/login")
     public String showLoginForm(@RequestParam(value = "error", required = false) String error, 
