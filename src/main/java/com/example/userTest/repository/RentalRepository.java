@@ -32,7 +32,7 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             @Param("endDate") LocalDateTime endDate);
 
     /**
-     * 会員別レンタル実績ベスト10を取得 (標準JPQL)
+     * 会員別レンタル実績ベスト10を取得
      */
     @Query("SELECT r.userId, COUNT(r) FROM Rental r " +
            "GROUP BY r.userId " +
@@ -40,10 +40,10 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     List<Object[]> findTopUserRanking();
 
     /**
-     * 書籍別レンタル実績ベスト10を取得 (標準JPQL)
+     * 書籍別レンタル実績ベスト10を取得（簡略化版）
      */
-    @Query("SELECT r.bookHistory.title, COUNT(r) FROM Rental r " +
-           "GROUP BY r.bookHistory.title " +
+    @Query("SELECT r.title, COUNT(r) FROM Rental r " +
+           "GROUP BY r.title " +
            "ORDER BY COUNT(r) DESC")
     List<Object[]> findTopBookRanking();
 }
