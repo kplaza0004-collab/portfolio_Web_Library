@@ -1,13 +1,11 @@
 package com.example.userTest.controller;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,171 +13,108 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.example.userTest.dto.AdminSearchForm;
-import com.example.userTest.dto.MonthlyRentalStat;
 import com.example.userTest.entity.Account;
 import com.example.userTest.entity.Rental;
-import com.example.userTest.entity.Role;
+import com.example.userTest.form.AdminSearchForm;
 import com.example.userTest.repository.AccountRepository;
 import com.example.userTest.repository.RentalRepository;
+import com.example.userTest.service.RentalService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/admin")
+@RequiredArgsConstructor
 public class AdminController {
 
     private final AccountRepository accountRepository;
     private final RentalRepository rentalRepository;
+    private final RentalService rentalService;
 
-    public AdminController(AccountRepository accountRepository, RentalRepository rentalRepository) {
-        this.accountRepository = accountRepository;
-        this.rentalRepository = rentalRepository;
-    }
-
+    /**
+     * 管理者MENU画面の表示
+     */
     @GetMapping("/menu")
-    public String adminMenu(@ModelAttribute("adminSearchForm") AdminSearchForm searchForm, Model model) {
+    public String adminMenu(
+            @ModelAttribute("adminSearchForm") AdminSearchForm form,
+            Model model) {
 
-        final AdminSearchForm form = (searchForm != null) ? searchForm : new AdminSearchForm();
-
-        // 1. 会員IDのメンテナンス（一般ユーザー一覧・10件ずつ）
-        List<Account> allUsers = accountRepository.findByRole(Role.USER);
-        model.addAttribute("userList", getPagedList(allUsers, form.getUserPage()));
-        model.addAttribute("userTotalPages", (int) Math.ceil((double) allUsers.size() / 10));
-
-        // 2. 管理者IDのメンテナンス（管理者一覧・10件ずつ）
-        List<Account> allAdmins = accountRepository.findByRole(Role.ADMIN);
-        model.addAttribute("adminList", getPagedList(allAdmins, form.getAdminPage()));
-        model.addAttribute("adminTotalPages", (int) Math.ceil((double) allAdmins.size() / 10));
-
-        // 3. レンタル中書籍のメンテナンス（フィルタリング＆10件ずつ）
-        List<Rental> rentingList = rentalRepository.findAll().stream()
-                .filter(r -> "RENTING".equals(r.getStatus()))
-                .filter(r -> form.getRentalUserId() == null || form.getRentalUserId().isEmpty() || r.getUserId().equals(form.getRentalUserId()))
-                .filter(r -> filterByDateRange(r.getRentalDate(), form.getRentalFromDate(), form.getRentalToDate()))
-                .collect(Collectors.toList());
-
-        model.addAttribute("rentingList", getPagedList(rentingList, form.getRentalPage()));
-        model.addAttribute("rentingTotalPages", (int) Math.ceil((double) rentingList.size() / 10));
-
-        // 4. レンタル実績集計（月単位12ヶ月分）
-        List<MonthlyRentalStat> monthlyStats = calculateMonthlyStats(form);
-        model.addAttribute("monthlyStats", monthlyStats);
-
-        // 5. ランキング Best 10（例外・ヌル安全ガード処理付き）
-        List<Object[]> userRanking = new ArrayList<>();
-        List<Object[]> bookRanking = new ArrayList<>();
-        
-        try {
-            List<Object[]> uRank = rentalRepository.findTopUserRanking();
-            if (uRank != null) {
-                userRanking = uRank.stream().limit(10).collect(Collectors.toList());
-            }
-        } catch (Exception e) {
-            System.err.println("User Ranking Error: " + e.getMessage());
+        // 1. Formがnullの場合の安全初期化
+        if (form == null) {
+            form = new AdminSearchForm();
         }
 
-        try {
-            List<Object[]> bRank = rentalRepository.findTopBookRanking();
-            if (bRank != null) {
-                bookRanking = bRank.stream().limit(10).collect(Collectors.toList());
-            }
-        } catch (Exception e) {
-            System.err.println("Book Ranking Error: " + e.getMessage());
-        }
+        int pageSize = 10;
+        int userPage = form.getUserPage() != null ? form.getUserPage() : 0;
+        int adminPage = form.getAdminPage() != null ? form.getAdminPage() : 0;
 
-        model.addAttribute("userRanking", userRanking);
-        model.addAttribute("bookRanking", bookRanking);
+        // 2. 会員一覧 (ROLE_USER) の取得
+        Pageable userPageable = PageRequest.of(userPage, pageSize);
+        Page<Account> userPageResult = accountRepository.findByRole("ROLE_USER", userPageable);
+        model.addAttribute("userList", userPageResult != null ? userPageResult.getContent() : new ArrayList<>());
+        model.addAttribute("userTotalPages", userPageResult != null ? userPageResult.getTotalPages() : 0);
 
-        // Modelへ確実にFormをセット
+        // 3. 管理者一覧 (ROLE_ADMIN) の取得
+        Pageable adminPageable = PageRequest.of(adminPage, pageSize);
+        Page<Account> adminPageResult = accountRepository.findByRole("ROLE_ADMIN", adminPageable);
+        model.addAttribute("adminList", adminPageResult != null ? adminPageResult.getContent() : new ArrayList<>());
+        model.addAttribute("adminTotalPages", adminPageResult != null ? adminPageResult.getTotalPages() : 0);
+
+        // 4. レンタル中書籍一覧の取得 (サービス経由)
+        List<Rental> rentingList = rentalService.getRentingList(form);
+        model.addAttribute("rentingList", rentingList != null ? rentingList : new ArrayList<>());
+
+        // 5. 月別実績集計の取得 (サービス経由)
+        List<?> monthlyStats = rentalService.getMonthlyStats(form);
+        model.addAttribute("monthlyStats", monthlyStats != null ? monthlyStats : new ArrayList<>());
+
+        // 6. ランキングデータの取得
+        List<Object[]> userRanking = rentalRepository.findTopUserRanking();
+        model.addAttribute("userRanking", userRanking != null ? userRanking : new ArrayList<>());
+
+        List<Object[]> bookRanking = rentalRepository.findTopBookRanking();
+        model.addAttribute("bookRanking", bookRanking != null ? bookRanking : new ArrayList<>());
+
         model.addAttribute("adminSearchForm", form);
 
-        return "adminMenu";
+        return "admin/menu";
     }
 
-    // チェックIDの削除（会員・管理者共通）
+    /**
+     * ユーザーID / 管理者IDの削除処理
+     */
     @PostMapping("/users/delete")
-    public String deleteAccounts(@RequestParam(value = "deleteIds", required = false) List<String> deleteIds) {
+    public String deleteUsers(
+            @RequestParam(name = "deleteIds", required = false) List<String> deleteIds,
+            RedirectAttributes redirectAttributes) {
+
         if (deleteIds != null && !deleteIds.isEmpty()) {
             accountRepository.deleteAllById(deleteIds);
+            redirectAttributes.addFlashAttribute("successMessage", "選択したユーザーを削除しました。");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "削除対象が選択されていません。");
         }
+
         return "redirect:/admin/menu";
     }
 
-    // レンタル中書籍の一括返却（ステータス更新）
+    /**
+     * レンタル中書籍の強制返却処理
+     */
     @PostMapping("/rentals/return")
-    public String returnRentals(@RequestParam(value = "rentalIds", required = false) List<Long> rentalIds) {
+    public String returnRentals(
+            @RequestParam(name = "rentalIds", required = false) List<Long> rentalIds,
+            RedirectAttributes redirectAttributes) {
+
         if (rentalIds != null && !rentalIds.isEmpty()) {
-            List<Rental> rentals = rentalRepository.findAllById(rentalIds);
-            for (Rental r : rentals) {
-                r.setStatus("RETURNED");
-                r.setReturnedDate(LocalDateTime.now());
-            }
-            rentalRepository.saveAll(rentals);
+            rentalService.forceReturnRentals(rentalIds);
+            redirectAttributes.addFlashAttribute("successMessage", "選択した書籍を返却済みに更新しました。");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "対象の書籍が選択されていません。");
         }
+
         return "redirect:/admin/menu";
-    }
-
-    // --- 内部補助メソッド ---
-
-    private <T> List<T> getPagedList(List<T> list, int page) {
-        if (list == null || list.isEmpty()) {
-            return new ArrayList<>();
-        }
-        int pageSize = 10;
-        int maxPage = Math.max(0, (int) Math.ceil((double) list.size() / (double) pageSize) - 1);
-        int currentPage = Math.max(0, Math.min(page, maxPage));
-        
-        int fromIndex = currentPage * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, list.size());
-        
-        if (fromIndex >= list.size()) {
-            return new ArrayList<>();
-        }
-        return list.subList(fromIndex, toIndex);
-    }
-
-    private boolean filterByDateRange(LocalDateTime target, String fromStr, String toStr) {
-        if (target == null) return false;
-        LocalDate targetDate = target.toLocalDate();
-        if (fromStr != null && !fromStr.isEmpty()) {
-            if (targetDate.isBefore(LocalDate.parse(fromStr))) return false;
-        }
-        if (toStr != null && !toStr.isEmpty()) {
-            if (targetDate.isAfter(LocalDate.parse(toStr))) return false;
-        }
-        return true;
-    }
-
-    private List<MonthlyRentalStat> calculateMonthlyStats(AdminSearchForm form) {
-        List<MonthlyRentalStat> stats = new ArrayList<>();
-        YearMonth endYM = YearMonth.now();
-        YearMonth startYM = endYM.minusMonths(11);
-
-        if (form != null && form.getStatsFromDate() != null && !form.getStatsFromDate().isEmpty()) {
-            startYM = YearMonth.parse(form.getStatsFromDate());
-        }
-        if (form != null && form.getStatsToDate() != null && !form.getStatsToDate().isEmpty()) {
-            endYM = YearMonth.parse(form.getStatsToDate());
-        }
-
-        LocalDateTime start = startYM.atDay(1).atStartOfDay();
-        LocalDateTime end = endYM.atEndOfMonth().atTime(23, 59, 59);
-
-        String userIdParam = (form != null && form.getStatsUserId() != null && !form.getStatsUserId().isEmpty()) 
-                ? form.getStatsUserId() : null;
-
-        List<Rental> rentals = rentalRepository.findRentalsForStats(userIdParam, start, end);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-        YearMonth curr = startYM;
-        while (!curr.isAfter(endYM)) {
-            String ymStr = curr.format(formatter);
-            long count = (rentals != null) ? rentals.stream()
-                    .filter(r -> r.getRentalDate() != null && r.getRentalDate().format(formatter).equals(ymStr))
-                    .count() : 0;
-            stats.add(new MonthlyRentalStat(ymStr, count));
-            curr = curr.plusMonths(1);
-        }
-        return stats;
     }
 }
