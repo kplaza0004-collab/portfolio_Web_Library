@@ -50,7 +50,7 @@
         </form>
         
         <!-- ページネーション -->
-        <div class="pagination" th:if="${userTotalPages > 1}" style="margin-top: 15px; text-align: center; font-weight: bold;">
+        <div class="pagination" th:if="${userTotalPages != null and userTotalPages > 1}" style="margin-top: 15px; text-align: center; font-weight: bold;">
             <span th:each="i : ${#numbers.sequence(0, userTotalPages - 1)}">
                 <a th:if="${i != (adminSearchForm?.userPage ?: 0)}" 
                    th:href="@{/admin/menu(userPage=${i}, adminPage=${adminSearchForm?.adminPage ?: 0})}" 
@@ -93,7 +93,7 @@
         </form>
         
         <!-- ページネーション -->
-        <div class="pagination" th:if="${adminTotalPages > 1}" style="margin-top: 15px; text-align: center; font-weight: bold;">
+        <div class="pagination" th:if="${adminTotalPages != null and adminTotalPages > 1}" style="margin-top: 15px; text-align: center; font-weight: bold;">
             <span th:each="i : ${#numbers.sequence(0, adminTotalPages - 1)}">
                 <a th:if="${i != (adminSearchForm?.adminPage ?: 0)}" 
                    th:href="@{/admin/menu(adminPage=${i}, userPage=${adminSearchForm?.userPage ?: 0})}" 
@@ -187,8 +187,8 @@
             </thead>
             <tbody>
                 <tr th:each="stat : ${monthlyStats}">
-                    <td style="text-align: center;" th:text="${stat.month}">2026-01</td>
-                    <td style="text-align: center;" th:text="${stat.count}">0</td>
+                    <td style="text-align: center;" th:text="${stat['month'] ?: stat[0] ?: '-'}">2026-01</td>
+                    <td style="text-align: center;" th:text="${stat['count'] ?: stat[1] ?: 0}">0</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(monthlyStats)}">
                     <td colspan="2" style="text-align: center;">データがありません。</td>
@@ -215,8 +215,8 @@
                     <tbody>
                         <tr th:each="row, stat : ${userRanking}">
                             <td style="text-align: center;" th:text="${stat.count}">1</td>
-                            <td th:text="${row[0]}">User01</td>
-                            <td style="text-align: center;" th:text="${row[1]}">15</td>
+                            <td th:text="${row[0] ?: '-'}">User01</td>
+                            <td style="text-align: center;" th:text="${row[1] ?: 0}">15</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(userRanking)}">
                             <td colspan="3" style="text-align: center;">データがありません。</td>
@@ -239,8 +239,8 @@
                     <tbody>
                         <tr th:each="row, stat : ${bookRanking}">
                             <td style="text-align: center;" th:text="${stat.count}">1</td>
-                            <td th:text="${row[0]}">Java入門</td>
-                            <td style="text-align: center;" th:text="${row[1]}">20</td>
+                            <td th:text="${row[0] ?: 'タイトルなし'}">Java入門</td>
+                            <td style="text-align: center;" th:text="${row[1] ?: 0}">20</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(bookRanking)}">
                             <td colspan="3" style="text-align: center;">データがありません。</td>
