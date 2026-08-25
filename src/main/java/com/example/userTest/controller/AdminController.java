@@ -56,7 +56,8 @@ public class AdminController {
             model.addAttribute("bookRanking", new ArrayList<>());
         }
 
-        return "admin/menu";
+        // src/main/resources/templates/adminMenu.html を指定
+        return "adminMenu";
     }
 
     /**
