@@ -20,13 +20,12 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     long countByUserIdAndStatus(String userId, String status);
 
     /**
-     * 月別実績集計用の検索クエリ (PostgreSQL安全対応)
-     * AdminController 側で空文字は null 変換されるため、:userId = '' の判定を排除しています。
+     * 月別実績集計用の検索クエリ (PostgreSQL Native SQL対応)
      */
-    @Query("SELECT r FROM Rental r WHERE " +
-           "(:userId IS NULL OR r.userId = :userId) AND " +
-           "(:startDate IS NULL OR r.rentalDate >= :startDate) AND " +
-           "(:endDate IS NULL OR r.rentalDate <= :endDate)")
+    @Query(value = "SELECT * FROM rentals r WHERE " +
+                   "(:userId IS NULL OR r.user_id = :userId) AND " +
+                   "(:startDate IS NULL OR r.rental_date >= :startDate) AND " +
+                   "(:endDate IS NULL OR r.rental_date <= :endDate)", nativeQuery = true)
     List<Rental> findRentalsForStats(
             @Param("userId") String userId,
             @Param("startDate") LocalDateTime startDate,
@@ -35,7 +34,7 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     /**
      * 会員別レンタル実績ベスト10を取得 (PostgreSQL完全対応)
      */
-    @Query(value = "SELECT LPAD(CAST(r.user_id AS text), 8, '0') AS userName, COUNT(r.id) AS rentalCount " +
+    @Query(value = "SELECT CAST(r.user_id AS text) AS userName, COUNT(r.id) AS rentalCount " +
                    "FROM rentals r " +
                    "GROUP BY r.user_id " +
                    "ORDER BY COUNT(r.id) DESC " +

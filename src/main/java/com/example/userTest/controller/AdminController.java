@@ -39,13 +39,6 @@ public class AdminController {
     @GetMapping("/menu")
     public String adminMenu(@ModelAttribute("adminSearchForm") AdminSearchForm searchForm, Model model) {
 
-    	// ★ メソッドの中（処理の最初など）に記述します
-//        List<Account> allAccounts = accountRepository.findAll();
-//        for (Account acc : allAccounts) {
-//            System.out.println("ID: " + acc.getUserId() + ", Role: " + acc.getRole());
-//        }
-    	
-        // ラムダ式内での参照用に final な変数 form を宣言（effectively final の確保）
         final AdminSearchForm form = (searchForm != null) ? searchForm : new AdminSearchForm();
 
         // 1. 会員IDのメンテナンス（一般ユーザー一覧・10件ずつ）
@@ -72,9 +65,27 @@ public class AdminController {
         List<MonthlyRentalStat> monthlyStats = calculateMonthlyStats(form);
         model.addAttribute("monthlyStats", monthlyStats);
 
-        // 5. ランキング Best 10（自動集計）
-        List<Object[]> userRanking = rentalRepository.findTopUserRanking().stream().limit(10).collect(Collectors.toList());
-        List<Object[]> bookRanking = rentalRepository.findTopBookRanking().stream().limit(10).collect(Collectors.toList());
+        // 5. ランキング Best 10（例外・ヌル安全ガード処理付き）
+        List<Object[]> userRanking = new ArrayList<>();
+        List<Object[]> bookRanking = new ArrayList<>();
+        
+        try {
+            List<Object[]> uRank = rentalRepository.findTopUserRanking();
+            if (uRank != null) {
+                userRanking = uRank.stream().limit(10).collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            System.err.println("User Ranking Error: " + e.getMessage());
+        }
+
+        try {
+            List<Object[]> bRank = rentalRepository.findTopBookRanking();
+            if (bRank != null) {
+                bookRanking = bRank.stream().limit(10).collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            System.err.println("Book Ranking Error: " + e.getMessage());
+        }
 
         model.addAttribute("userRanking", userRanking);
         model.addAttribute("bookRanking", bookRanking);
@@ -142,7 +153,7 @@ public class AdminController {
     private List<MonthlyRentalStat> calculateMonthlyStats(AdminSearchForm form) {
         List<MonthlyRentalStat> stats = new ArrayList<>();
         YearMonth endYM = YearMonth.now();
-        YearMonth startYM = endYM.minusMonths(11); // デフォルト: 過去1年間 (12ヶ月)
+        YearMonth startYM = endYM.minusMonths(11);
 
         if (form != null && form.getStatsFromDate() != null && !form.getStatsFromDate().isEmpty()) {
             startYM = YearMonth.parse(form.getStatsFromDate());
@@ -163,9 +174,9 @@ public class AdminController {
         YearMonth curr = startYM;
         while (!curr.isAfter(endYM)) {
             String ymStr = curr.format(formatter);
-            long count = rentals.stream()
+            long count = (rentals != null) ? rentals.stream()
                     .filter(r -> r.getRentalDate() != null && r.getRentalDate().format(formatter).equals(ymStr))
-                    .count();
+                    .count() : 0;
             stats.add(new MonthlyRentalStat(ymStr, count));
             curr = curr.plusMonths(1);
         }
