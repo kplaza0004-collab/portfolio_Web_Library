@@ -13,7 +13,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.userTest.entity.Account;
 import com.example.userTest.entity.Role;
-import com.example.userTest.form.AdminSearchForm;
 import com.example.userTest.repository.AccountRepository;
 import com.example.userTest.repository.RentalRepository;
 
@@ -47,9 +46,6 @@ public class AdminController {
         // 4. ランキングデータの取得
         model.addAttribute("userRanking", rentalRepository.findTopUserRanking());
         model.addAttribute("bookRanking", rentalRepository.findTopBookRanking());
-
-        // 5. 検索フォーム初期値
-        model.addAttribute("adminSearchForm", new AdminSearchForm());
 
         return "admin/menu";
     }
