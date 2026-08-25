@@ -43,21 +43,24 @@
         <p th:if="${registerError}" th:text="${registerError}" style="color:red; text-shadow:none;"></p>
 
         <form th:action="@{/adminRegister}" th:object="${accountForm}" method="post">
+            <!-- ★追加：管理者権限(ADMIN)を送信するための隠しフィールド -->
+            <input type="hidden" name="role" value="ADMIN">
+
             <div class="form-group">
                 <label for="adminRegId">ID：</label>
-                <input type="text" id="adminRegId" th:field="*{id}">
+                <input type="text" id="adminRegId" th:field="*{id}" required>
             </div>
             <p th:if="${#fields.hasErrors('id')}" th:errors="*{id}" style="color:red; text-shadow:none; margin-top:-10px; margin-bottom:10px;"></p>
 
             <div class="form-group">
                 <label for="adminRegPw">パスワード：</label>
-                <input type="password" id="adminRegPw" th:field="*{password}">
+                <input type="password" id="adminRegPw" th:field="*{password}" required>
             </div>
             <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color:red; text-shadow:none; margin-top:-10px; margin-bottom:10px;"></p>
 
             <div class="form-group">
                 <label for="adminRegConfirmPw">確認用パスワード：</label>
-                <input type="password" id="adminRegConfirmPw" th:field="*{confirmPassword}">
+                <input type="password" id="adminRegConfirmPw" th:field="*{confirmPassword}" required>
             </div>
             <!-- @AssertTrue(isPasswordMatching) のエラー判定 -->
             <p th:if="${#fields.hasErrors('passwordMatching')}" th:errors="*{passwordMatching}" style="color:red; text-shadow:none; margin-top:-10px; margin-bottom:10px;"></p>
